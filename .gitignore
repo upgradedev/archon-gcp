@@ -1,0 +1,11 @@
+.env
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+# GCP service-account keys must never be committed
+*-sa.json
+service-account*.json
+*.pem
