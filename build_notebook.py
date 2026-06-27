@@ -146,7 +146,7 @@ md_outro = """\
 - **Evaluation / guardrails** — every entry must balance; bank lines must reconcile
 - **Vibe coding** — each module is a one-paragraph spec, prompted against ground-truth tests
 
-**Code:** github.com/`[[YOUR_GITHUB]]`/archon-gcp · MIT · also runs on Nebius and Azure."""
+**Code:** https://github.com/upgradedev/archon-gcp · MIT · also runs on Nebius and Azure."""
 
 
 def code_cell(src):

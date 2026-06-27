@@ -82,7 +82,7 @@ infra each time). Swap `ledger.py` to localise the chart of accounts / tax rules
 
 ## 6. Code & reproducibility  *(rubric: communication · real-world value)*
 
-- Public repo (MIT): `[[ USER: GitHub URL ]]` — `python -m archon.cli` runs the books;
+- Public repo (MIT): `https://github.com/upgradedev/archon-gcp` — `python -m archon.cli` runs the books;
   `pytest -q` → **11 offline tests**.
 - Public notebook: self-contained, runs top-to-bottom with **zero setup**; the
   agent cell runs with a `GOOGLE_API_KEY` secret.
