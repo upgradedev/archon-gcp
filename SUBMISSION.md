@@ -3,8 +3,8 @@
 **Kaggle × Google AI Agents Intensive (Vibe Coding) — Capstone Writeup**
 **Track:** Agents for Business
 
-> Paste this into the Kaggle Writeup editor. `[[ USER: … ]]` markers are the only
-> things to fill (video URL, repo URL). Attach the public notebook + the video.
+> Paste this into the Kaggle Writeup editor. The only remaining manual field is
+> the final public/unlisted video URL. Attach the public notebook + the video.
 
 ---
 
@@ -84,8 +84,11 @@ infra each time). Swap `ledger.py` to localise the chart of accounts / tax rules
 
 - Public repo (MIT): `https://github.com/upgradedev/archon-gcp` — `python -m archon.cli` runs the books;
   `pytest -q` → **11 offline tests**.
-- Public notebook: self-contained, runs top-to-bottom with **zero setup**; the
-  agent cell runs with a `GOOGLE_API_KEY` secret.
+- Public notebook: `https://www.kaggle.com/code/efthimiosfousekis/archon-autonomous-bookkeeper-gcp`
+  is self-contained and runs top-to-bottom with **zero setup**; the agent cell
+  runs with a `GOOGLE_API_KEY` secret.
+- Evidence CI: `https://github.com/upgradedev/archon-gcp/actions/workflows/ci.yml`
+  rebuilds the notebook and runs the deterministic demo.
 
 ## 7. Honest lessons
 

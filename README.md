@@ -1,5 +1,8 @@
 # Archon — the autonomous bookkeeper (GCP)
 
+Public notebook: https://www.kaggle.com/code/efthimiosfousekis/archon-autonomous-bookkeeper-gcp  
+Evidence CI: https://github.com/upgradedev/archon-gcp/actions/workflows/ci.yml
+
 > Archon reads the documents a small business actually receives — sales invoices, purchase invoices, bank transactions, payroll — **classifies** them, posts **double-entry journal entries**, **reconciles** invoices against payments, and rolls everything into a **P&L, a cash view, and AR/AP**. An AI bookkeeper, not a dashboard.
 
 Built for the **Kaggle × Google "AI Agents Intensive (Vibe Coding)" capstone** with **Google ADK + Gemini** on **GCP**. This is the **GCP member of the Archon family** (Archon also runs on Nebius and Azure — same product, platform-native infra each time).
@@ -78,6 +81,9 @@ The **LLM orchestrates; the ledger is deterministic**, so the books are auditabl
 ## Tests
 
 `pytest -q` → **11 offline tests**: classification, VAT-with-rate parsing, the payroll payable split, double-entry balance, the P&L/cash roll-up, reconciliation (including an unmatched-line case).
+
+GitHub Evidence CI also rebuilds the Kaggle notebook and runs the deterministic
+CLI demo. Latest known green run: `28311852093`.
 
 ## License
 
