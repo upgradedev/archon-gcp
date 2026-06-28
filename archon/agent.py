@@ -30,7 +30,7 @@ leaves the bank; the difference (EFKA + withheld tax) is a payable that settles
 later. Surface that cash-timing distinction when payroll is involved.
 """
 
-DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 
 class ArchonAgent:

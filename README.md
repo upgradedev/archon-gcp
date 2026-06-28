@@ -42,6 +42,25 @@ cp .env.example .env        # add your Google AI Studio key
 python -m archon.cli --agent
 ```
 
+## Run the live agent in the published Kaggle notebook
+
+The notebook ships **deterministic-by-default** (the agent cell skips cleanly
+without a key, so it always runs top-to-bottom). To make the *published* notebook
+demonstrate the **live ADK + Gemini agent**:
+
+1. Open the kernel on Kaggle → **Add-ons → Secrets** → add a secret named
+   **`GOOGLE_API_KEY`** (your Google AI Studio / Gemini key) and attach it to the
+   notebook.
+2. No code change needed: `enable_internet` is already `true` in
+   `kernel-metadata.json`, and the agent cell pulls the secret into the environment
+   via `kaggle_secrets.UserSecretsClient`.
+3. Re-run / re-push the kernel (`kaggle kernels push`). The agent cell now executes
+   a **real Gemini tool-calling turn** (model `gemini-2.5-flash`) instead of the
+   skip message. The deterministic books above are unchanged and remain the grading
+   anchor (Gemini output is non-deterministic by nature).
+
+Model note: the agent uses **`gemini-2.5-flash`** (override with `GEMINI_MODEL`).
+
 ## Architecture (GCP-native)
 
 ```

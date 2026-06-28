@@ -90,6 +90,14 @@ the conversational layer, not the source of the numbers."""
 
 agent_cell = '''\
 import os
+# On Kaggle, the GOOGLE_API_KEY lives in the notebook's Secrets (Add-ons -> Secrets),
+# not the environment — pull it into os.environ so the live agent can run.
+if not os.environ.get("GOOGLE_API_KEY"):
+    try:
+        from kaggle_secrets import UserSecretsClient
+        os.environ["GOOGLE_API_KEY"] = UserSecretsClient().get_secret("GOOGLE_API_KEY")
+    except Exception:
+        pass
 try:
     from google.adk.agents import Agent
     from google.adk.runners import InMemoryRunner
@@ -124,7 +132,7 @@ else:
                 "net_profit": s.net_profit, "cash_in": s.cash_in, "cash_out": s.cash_out,
                 "net_cash": s.net_cash, "notes": s.notes}
 
-    agent = Agent(name="archon_bookkeeper", model="gemini-2.0-flash",
+    agent = Agent(name="archon_bookkeeper", model="gemini-2.5-flash",
                   instruction="You are Archon, an autonomous bookkeeper. Call record_document for "
                   "each document the user provides, reconcile_bank to match bank lines to invoices "
                   "and payroll, and get_books when asked about money. Payroll "
