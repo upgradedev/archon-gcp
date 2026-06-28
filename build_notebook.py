@@ -110,6 +110,13 @@ else:
         e = session_ledger.add(doc)
         return {"classified_as": doc.doc_type.value, "memo": e.memo, "balanced": e.is_balanced}
 
+    def reconcile_bank() -> dict:
+        """Match every bank line to the invoice or payroll it settles."""
+        return {"matches": [
+            {"bank_ref": m.bank_ref, "matched": m.matched, "amount": m.amount, "note": m.note}
+            for m in session_ledger.reconcile()
+        ]}
+
     def get_books() -> dict:
         """Return the period P&L, cash view, and AR/AP."""
         s = session_ledger.statements()
@@ -119,10 +126,11 @@ else:
 
     agent = Agent(name="archon_bookkeeper", model="gemini-2.0-flash",
                   instruction="You are Archon, an autonomous bookkeeper. Call record_document for "
-                  "each document the user provides, then get_books when asked about money. Payroll "
+                  "each document the user provides, reconcile_bank to match bank lines to invoices "
+                  "and payroll, and get_books when asked about money. Payroll "
                   "EXPENSE exceeds the net that leaves the bank; the difference (EFKA+tax) is a "
                   "payable that settles later — surface that. Never invent figures.",
-                  tools=[record_document, get_books])
+                  tools=[record_document, reconcile_bank, get_books])
     runner = InMemoryRunner(agent=agent, app_name="archon")
     try:
         runner.session_service.create_session_sync(app_name="archon", user_id="owner", session_id="s1")
