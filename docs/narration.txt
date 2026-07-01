@@ -1,0 +1,13 @@
+Every small-business owner I know reads the bank statement and assumes that's their financial picture. It isn't. Your books only exist once you correlate the documents you actually receive, and one of them, payroll, costs far more than what leaves your account.
+
+So I built Archon, an autonomous bookkeeper. It's a Gemini agent, built on Google's Agent Development Kit, running on GCP. You hand it the documents you get, sales invoices, purchases, bank lines, a payroll run, and it classifies each one, posts a balanced double-entry journal entry, and reconciles every bank line to the invoice or payroll it settles.
+
+Here it goes through one month. Six documents become six balanced journal entries. The language model orchestrates, but the bookkeeping math is deterministic, so the numbers are auditable. All three bank lines reconcile.
+
+Then it runs an evaluation gate, four cross-document consistency rules, R1 through R4. The bank payroll line matches the payroll net within two percent. Employer cost over gross sits in the expected band. The payment date is inside the period. And gross covers net plus withheld tax. Four out of four pass, so the books are trustworthy end to end.
+
+Now the insight a dashboard never gives you. Payroll expense is twenty-eight thousand two hundred forty-nine euros, the true employer cost. But only fourteen thousand three hundred fifty actually left the bank this month, to the employees. The other thirteen thousand eight hundred ninety-nine, EFKA and withheld tax, is a payable that settles later. Profit and cash are different stories, and Archon keeps both straight.
+
+The analysis itself is a Google ADK Sequential Agent, three sub-agents in order, reconciler, validator, narrator, each passing its result forward through shared state. The conversational agent adds four tools and session memory, so you can feed documents across turns and just ask, in plain language. Tools, memory, multi-agent orchestration, and an evaluation gate, the course concepts, doing a real job.
+
+Everything you're watching runs offline, with scripted models, so anyone can reproduce it from the notebook with zero setup and no key. Point it at live Gemini with an API key and the same agent runs for real. Open source, MIT, and it also runs on Nebius and Azure. Thanks for watching.

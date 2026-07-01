@@ -1,0 +1,56 @@
+1 $ python -m archon.cli
+2 Store backend: LocalStore
+4 Ingesting a mixed document set (sales, purchase, bank x3, payroll)...
+6   + classified sales_invoice     from sales_invoice_INV-2026-014.txt
+9   + classified purchase_invoice  from purchase_invoice_SUP-8841.txt
+12   + classified bank_transaction  from bank_in_INV-2026-014.txt
+15   + classified bank_transaction  from bank_out_SUP-8841.txt
+18   + classified bank_transaction  from bank_out_payroll.txt
+21   + classified payroll           from payroll_2026-01.txt
+25
+26 ==================================================================
+27   ARCHON - books for Reflective IKE  ·  2026-01
+28 ==================================================================
+30   Journal (double-entry):
+31     · Sales invoice INV-2026-014 to ACME RETAIL A.E.  [balanced]
+33     · Purchase invoice SUP-8841 from CLOUD VENDOR LTD  [balanced]
+35     · Receipt INV-2026-014  [balanced]
+37     · Payment SUP-8841  [balanced]
+39     · Payroll net paid (ΜΙΣΘΟΔΟΣΙΑ ΙΑΝΟΥΑΡΙΟΥ)  [balanced]
+41     · Payroll 2026-01 (2 employees)  [balanced]
+43 ------------------------------------------------------------------
+58   Reconciliation:
+60     ✓ INV-2026-014  €6,200.00  - matched invoice
+63     ✓ SUP-8841  €1,240.00  - matched invoice
+66     ✓ ΜΙΣΘΟΔΟΣΙΑ ΙΑΝΟΥΑΡΙΟΥ  €14,350.00  - matched payroll net
+69 ------------------------------------------------------------------
+70   P&L:
+71     Revenue            €    5,000.00
+72     Operating expenses €    1,000.00
+73     Payroll expense    €   28,249.00
+74     Net profit         €  -24,249.00
+76   Cash:
+77     In                 €    6,200.00
+78     Out                €   15,590.00
+79     Net cash           €   -9,390.00
+80   AR €0.00  ·  AP €0.00
+82   note: Payroll expense €28,249.00, but only the net left the bank so far;
+83         €13,899.00 of EFKA+tax is still payable.
+85 ------------------------------------------------------------------
+86   Validation (R1-R4 eval gate):
+88     ✓ R1: bank payroll line ≈ payroll net pay (±2%)  - 0.0% deviation
+92     ✓ R2: employer cost / gross in [1.15, 1.35]  - ratio 1.223
+96     ✓ R3: payroll payment date ≤ period end  - 2026-01-31 ≤ 2026-01-31
+100     ✓ R4: gross ≥ net + withheld tax  - implied employee EFKA €3,204.00
+104 ------------------------------------------------------------------
+108   Self-check passed: every entry balances; R1-R4 gates hold; figures match ground truth.
+114
+124 $ python scripts/demo_sequential.py
+126 Google ADK SequentialAgent: archon_analysis   (offline, scripted models)
+128   reconciler -> validator -> narrator   (state via output_key)
+130 ------------------------------------------------------------------
+132   [reconciler] -> All 3 bank lines reconcile to their invoices and payroll.
+136   [validator ] -> R1-R4 consistency gates all hold.
+140   [narrator  ] -> Net loss of 24,249; payroll expense of 28,249 runs ahead of the cash out.
+144 ------------------------------------------------------------------
+146   eval gate: 4/4 validation gates passed
