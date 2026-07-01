@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "archon-gcp"
+version = "0.2.0"
+description = "Archon — an autonomous bookkeeping agent on Google ADK + Gemini (GCP)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+[tool.setuptools]
+packages = ["archon"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    # ADK 2.x emits deprecation/experimental warnings for SequentialAgent and
+    # JSON-schema function declarations; they are informational and must not
+    # fail the suite.
+    "ignore::DeprecationWarning",
+    "ignore::UserWarning",
+]
+
+[tool.coverage.run]
+source = ["archon"]
+omit = ["archon/cli.py"]
