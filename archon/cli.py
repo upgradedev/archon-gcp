@@ -12,7 +12,9 @@ import sys
 from .documents import GROUND_TRUTH, SAMPLE_DOCS
 from .extract import extract_document
 from .ledger import Ledger
+from .narrator import narrate
 from .store import get_store
+from .validation import all_passed, validate
 
 
 def _print_books(led: Ledger) -> None:
@@ -42,6 +44,13 @@ def _print_books(led: Ledger) -> None:
     print(f"  AR €{s.accounts_receivable:,.2f}  ·  AP €{s.accounts_payable:,.2f}")
     for n in s.notes:
         print(f"  ⓘ {n}")
+    print("-" * 66)
+    print("  Validation (R1–R4 eval gate):")
+    for r in validate(led):
+        print(f"    {'✓' if r.passed else '✗'} {r.rule}  — {r.message}")
+    print("-" * 66)
+    print("  Executive summary:")
+    print(f"    {narrate(s, validate(led))}")
     print("=" * 66 + "\n")
 
 
@@ -64,7 +73,8 @@ def run_deterministic() -> Ledger:
     assert s.net_cash == GROUND_TRUTH["net_cash"]
     assert s.payroll_expense > s.cash_out          # true cost exceeds month's cash out
     assert all(m.matched for m in led.reconcile())
-    print("Self-check passed: every entry balances; figures match ground truth.\n")
+    assert all_passed(validate(led)), "a validation gate failed"
+    print("Self-check passed: every entry balances; R1–R4 gates hold; figures match ground truth.\n")
     return led
 
 

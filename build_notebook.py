@@ -12,7 +12,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 PKG = ROOT / "archon"
 
-CORE_MODULES = ["models.py", "extract.py", "ledger.py", "documents.py"]
+CORE_MODULES = ["models.py", "extract.py", "ledger.py", "documents.py",
+                "validation.py", "narrator.py"]
 
 
 def _inline(module: str) -> str:
@@ -73,9 +74,86 @@ print(f"  AR EUR {s.accounts_receivable:,.2f}   AP EUR {s.accounts_payable:,.2f}
 for n in s.notes:
     print("  note:", n)
 
+print("\\n=== VALIDATION (R1-R4 eval gate) ===")
+checks = validate(led)
+for r in checks:
+    print(f"  {'PASS' if r.passed else 'FAIL'} {r.rule}")
+    print(f"        {r.message}")
+
+print("\\n=== EXECUTIVE SUMMARY (deterministic) ===")
+print(" ", narrate(s, checks))
+
 assert led.all_entries_balanced()
 assert s.net_profit == GROUND_TRUTH["net_profit"]
-print("\\nSelf-check passed: every entry balances; figures match ground truth.")'''
+assert all(r.passed for r in checks)
+print("\\nSelf-check passed: every entry balances; R1-R4 gates hold; figures match ground truth.")'''
+
+md_pipeline = """\
+## The analysis pipeline — an ADK `SequentialAgent` (multi-agent)
+
+The Archon family runs a *chain* of specialised agents. Here three sub-agents run
+in order — **reconciler → validator → narrator** — handing state forward via
+`output_key`, exactly the course's multi-agent pattern. The deterministic engine
+computes the numbers; the pipeline narrates them.
+
+The cell below runs the **real** ADK `SequentialAgent` with **scripted models**,
+so it executes **offline with no API key** — a faithful demonstration of the
+concept that still runs top-to-bottom in the published notebook."""
+
+pipeline_cell = '''\
+# Ensure google-adk is available (Kaggle has internet enabled).
+try:
+    import google.adk  # noqa: F401
+except ImportError:
+    import subprocess, sys
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "google-adk"], check=False)
+
+try:
+    from typing import AsyncGenerator
+    from google.adk.agents import LlmAgent, SequentialAgent
+    from google.adk.models import BaseLlm
+    from google.adk.models.llm_response import LlmResponse
+    from google.adk.runners import InMemoryRunner
+    from google.genai import types
+    HAVE_ADK = True
+except Exception as exc:
+    print("google-adk unavailable, skipping the SequentialAgent demo:", exc)
+    HAVE_ADK = False
+
+if HAVE_ADK:
+    class ScriptedText(BaseLlm):
+        """A model that returns one fixed line — lets the SequentialAgent run offline."""
+        reply: str = "ok"
+        def __init__(self, reply, **kw):
+            super().__init__(model="scripted", **kw); object.__setattr__(self, "reply", reply)
+        async def generate_content_async(self, req, stream=False) -> "AsyncGenerator[LlmResponse, None]":
+            yield LlmResponse(content=types.Content(role="model", parts=[types.Part(text=self.reply)]))
+
+    # Deterministic engine first: compute the books + gates, build the fact sheet.
+    led = Ledger(period=GROUND_TRUTH["period"], company="Reflective IKE")
+    for name, text in SAMPLE_DOCS.items():
+        led.add(extract_document(text, source_file=name, period=led.period))
+    facts = facts_sheet(led.statements(), validate(led))
+
+    reconciler = LlmAgent(name="reconciler", model=ScriptedText("All bank lines reconcile."),
+                          instruction="Reconcile the books.", output_key="reconciliation")
+    validator = LlmAgent(name="validator", model=ScriptedText("R1-R4 all pass."),
+                         instruction="Validate {reconciliation}.", output_key="validation")
+    narrator = LlmAgent(name="narrator", model=ScriptedText("Net loss; payroll expense runs ahead of cash."),
+                        instruction="Narrate {validation}.", output_key="summary")
+    pipeline = SequentialAgent(name="archon_analysis", sub_agents=[reconciler, validator, narrator])
+
+    runner = InMemoryRunner(agent=pipeline, app_name="archon-analysis")
+    try:
+        runner.session_service.create_session_sync(app_name="archon-analysis", user_id="owner", session_id="a1")
+    except AttributeError:
+        import asyncio; asyncio.get_event_loop().run_until_complete(
+            runner.session_service.create_session(app_name="archon-analysis", user_id="owner", session_id="a1"))
+    for ev in runner.run(user_id="owner", session_id="a1", new_message=types.Content(
+            role="user", parts=[types.Part(text="Analyse:\\n"+facts)])):
+        if ev.content and ev.content.parts and ev.content.parts[0].text:
+            print(f"  [{ev.author}] {ev.content.parts[0].text}")
+    print("\\nThree agents ran in sequence, each writing to shared state (output_key).")'''
 
 md_agent = """\
 ## The conversational agent (Google ADK + Gemini)
@@ -125,6 +203,11 @@ else:
             for m in session_ledger.reconcile()
         ]}
 
+    def validate_books() -> dict:
+        """Run the R1-R4 cross-document consistency gates over the books."""
+        return {"gates": [{"rule": r.rule, "passed": r.passed, "message": r.message}
+                          for r in validate(session_ledger)]}
+
     def get_books() -> dict:
         """Return the period P&L, cash view, and AR/AP."""
         s = session_ledger.statements()
@@ -135,10 +218,11 @@ else:
     agent = Agent(name="archon_bookkeeper", model="gemini-2.5-flash",
                   instruction="You are Archon, an autonomous bookkeeper. Call record_document for "
                   "each document the user provides, reconcile_bank to match bank lines to invoices "
-                  "and payroll, and get_books when asked about money. Payroll "
+                  "and payroll, validate_books to run the R1-R4 gates, and get_books when asked "
+                  "about money. Payroll "
                   "EXPENSE exceeds the net that leaves the bank; the difference (EFKA+tax) is a "
                   "payable that settles later — surface that. Never invent figures.",
-                  tools=[record_document, reconcile_bank, get_books])
+                  tools=[record_document, reconcile_bank, validate_books, get_books])
     runner = InMemoryRunner(agent=agent, app_name="archon")
     try:
         runner.session_service.create_session_sync(app_name="archon", user_id="owner", session_id="s1")
@@ -157,25 +241,37 @@ else:
 
 md_outro = """\
 ## How it maps to the course
-- **Tools / function calling** — `record_document`, `reconcile_bank`, `get_books`
+- **Tools / function calling** — `record_document`, `reconcile_bank`, `validate_books`, `get_books`
+- **Multi-agent (`SequentialAgent`)** — reconciler → validator → narrator, state via `output_key`
 - **Memory / state** — the agent's ledger accumulates documents across turns
-- **Evaluation / guardrails** — every entry must balance; bank lines must reconcile
+- **Evaluation / guardrails** — every entry must balance; the R1–R4 gates must hold
 - **Vibe coding** — each module is a one-paragraph spec, prompted against ground-truth tests
 
-**Code:** https://github.com/upgradedev/archon-gcp · MIT · also runs on Nebius and Azure."""
+**Code:** https://github.com/upgradedev/archon-gcp · MIT · also runs on Nebius and Azure.
+Full test pyramid (unit → integration → e2e, all offline) + security CI (gitleaks · CodeQL · pip-audit)."""
+
+
+_CELL_N = [0]
+
+
+def _next_id() -> str:
+    _CELL_N[0] += 1
+    return f"archon-cell-{_CELL_N[0]:02d}"
 
 
 def code_cell(src):
-    return {"cell_type": "code", "execution_count": None, "metadata": {}, "outputs": [],
-            "source": src.splitlines(keepends=True)}
+    return {"cell_type": "code", "id": _next_id(), "execution_count": None,
+            "metadata": {}, "outputs": [], "source": src.splitlines(keepends=True)}
 
 
 def md_cell(src):
-    return {"cell_type": "markdown", "metadata": {}, "source": src.splitlines(keepends=True)}
+    return {"cell_type": "markdown", "id": _next_id(), "metadata": {},
+            "source": src.splitlines(keepends=True)}
 
 
 nb = {
     "cells": [md_cell(md_intro), code_cell(core), code_cell(demo),
+              md_cell(md_pipeline), code_cell(pipeline_cell),
               md_cell(md_agent), code_cell(agent_cell), md_cell(md_outro)],
     "metadata": {"kernelspec": {"language": "python", "display_name": "Python 3", "name": "python3"},
                  "language_info": {"name": "python", "version": "3.11"}},

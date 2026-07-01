@@ -96,6 +96,20 @@ class ReconciliationMatch:
 
 
 @dataclass
+class ValidationResult:
+    """Outcome of one cross-document consistency gate (R1–R4).
+
+    The validator is the deterministic **eval gate**: books are only trusted
+    when every rule that applies passes. A skipped rule (required documents
+    absent) is reported as passed so it never blocks a partial month.
+    """
+    rule: str
+    passed: bool
+    severity: str          # "info" | "warning" | "error"
+    message: str
+
+
+@dataclass
 class FinancialStatements:
     period: str
     revenue: float

@@ -32,8 +32,8 @@ Every journal entry balances; every bank line reconciles to its invoice/payroll.
 **Deterministic books + tests — no key, runs anywhere:**
 ```bash
 pip install -r requirements.txt
-python -m archon.cli        # ingest a mixed month → journal, reconciliation, P&L, cash
-pytest -q                   # 11 tests, all offline
+python -m archon.cli        # ingest a mixed month → journal, reconcile, validate (R1–R4), P&L, cash, summary
+pytest -q                   # 43 tests, all offline (pip install -r requirements-dev.txt for coverage/nbmake)
 ```
 
 **Conversational agent (ADK + Gemini, multi-turn memory):**
@@ -70,12 +70,14 @@ Model note: the agent uses **`gemini-2.5-flash`** (override with `GEMINI_MODEL`)
         │  Archon ADK agent     │   Google ADK · Gemini   ← orchestrator + session memory
         └──────────┬───────────┘
         tool calls │  (function calling)
-   ┌───────────────┼───────────────────────┐
-   ▼               ▼               ▼
-record_document  reconcile_bank   get_books
-   │ classify+post   match bank↔doc   P&L · cash · AR/AP
+   ┌───────────────┼───────────────┬───────────────────────┐
+   ▼               ▼               ▼               ▼
+record_document  reconcile_bank  validate_books   get_books
+   │ classify+post   match bank↔doc   R1–R4 gate     P&L · cash · AR/AP
    ▼
-ledger.py (deterministic double-entry)  ──persist──▶  Firestore (ledger) · GCS (raw docs)
+ledger.py (deterministic double-entry) + validation.py (R1–R4)  ──persist──▶  Firestore · GCS
+
+analysis pipeline (ADK SequentialAgent):  reconciler ─▶ validator ─▶ narrator   (state via output_key)
 ```
 
 | Concern | GCP service | Local fallback |
@@ -92,17 +94,37 @@ The **LLM orchestrates; the ledger is deterministic**, so the books are auditabl
 
 | Course concept | Where |
 |---|---|
-| **Tools / function calling** | `record_document`, `reconcile_bank`, `get_books` (ADK tools) |
+| **Tools / function calling** | `record_document`, `reconcile_bank`, `validate_books`, `get_books` (ADK tools) |
+| **Multi-agent (`SequentialAgent`)** | `pipeline.py` — reconciler → validator → narrator, state passed via `output_key` |
 | **Memory / state** | the agent's `Ledger` accumulates documents across turns |
-| **Evaluation / guardrails** | every entry must balance; bank lines must reconcile |
+| **Evaluation / guardrails** | every entry must balance; the R1–R4 cross-document gates (`validation.py`) must hold |
 | **Vibe coding / spec-driven** | each module has a one-paragraph contract; built by prompting against ground-truth tests |
 
-## Tests
+## Tests & CI
 
-`pytest -q` → **11 offline tests**: classification, VAT-with-rate parsing, the payroll payable split, double-entry balance, the P&L/cash roll-up, reconciliation (including an unmatched-line case).
+`pytest` → **43 offline tests** in a unit → integration → e2e pyramid (no API key,
+no network):
 
-GitHub Evidence CI also rebuilds the Kaggle notebook and runs the deterministic
-CLI demo. Latest known green run: `28311852093`.
+| Layer | Covers |
+|---|---|
+| **unit** (`tests/unit`) | classification & VAT-rate parsing, double-entry posting, the payroll payable split, P&L/cash roll-up, reconciliation, the **R1–R4 validation gates**, the deterministic narrator, and the local store |
+| **integration** (`tests/integration`) | the **real ADK agent** driving its tools via a scripted fake model; the `SequentialAgent` pipeline's shape (stages + `output_key`) |
+| **e2e** (`tests/e2e`) | the full deterministic CLI run against ground truth; the **`SequentialAgent` running end-to-end offline** with scripted models |
+
+The ADK agent and the `SequentialAgent` are exercised **for real** offline: the
+tests inject `BaseLlm` fakes (`tests/adk_fakes.py`) that script tool calls and
+stage outputs, so genuine ADK function-calling and sequential state hand-off run
+in CI with no key.
+
+```bash
+pip install -r requirements-dev.txt
+pytest --cov=archon            # ~94% coverage
+```
+
+**Evidence CI** (`.github/workflows/`): the test pyramid, a check that
+`notebook.ipynb` is in sync with source, **executing the notebook top-to-bottom**
+(nbmake), the deterministic demo, and **security gates** — `gitleaks` (secrets),
+**CodeQL** (Python SAST), and `pip-audit` (dependency CVEs).
 
 ## License
 
