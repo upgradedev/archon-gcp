@@ -8,12 +8,14 @@ on:
       - main
       - master
 
+permissions:
+  contents: read
+
 jobs:
-  verify:
-    name: Test, rebuild notebook, and run demo
+  # ── Test pyramid + notebook execution ──────────────────────────────────────
+  test:
+    name: Test pyramid, notebook, demo
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,16 +26,48 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - name: Install dependencies
+      - name: Install dependencies (runtime + dev/test tooling)
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
 
-      - name: Offline tests
-        run: python -m pytest -q
+      - name: Test pyramid (unit + integration + e2e, all offline)
+        run: python -m pytest --cov=archon --cov-report=term-missing --cov-fail-under=85
 
-      - name: Rebuild notebook
+      - name: Rebuild notebook from source
         run: python build_notebook.py
 
-      - name: Deterministic demo
+      - name: Notebook must be in sync with source
+        run: git diff --exit-code notebook.ipynb
+
+      - name: Execute notebook top-to-bottom (offline, no API key)
+        run: python -m pytest --nbmake notebook.ipynb -o addopts=""
+
+      - name: Deterministic demo (graded anchor)
         run: python -m archon.cli
+
+  # ── Security gates ─────────────────────────────────────────────────────────
+  security:
+    name: Security scans (gitleaks + pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history for gitleaks)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Secret scan (gitleaks v8.18.4)
+        run: |
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz \
+            | tar -xz -C /tmp
+          /tmp/gitleaks detect --source . --redact --no-banner --exit-code 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Dependency vulnerability scan (pip-audit)
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          pip-audit -r requirements.txt

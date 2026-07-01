@@ -1,9 +1,13 @@
-# Core bookkeeping + tests — Python stdlib only, plus pytest.
-pytest>=8.0.0
+# Runtime dependencies.
+#
+# The DETERMINISTIC bookkeeping core (archon/ledger, extract, validation,
+# narrator) is Python stdlib only — it needs none of the below. These power the
+# optional conversational agent + SequentialAgent pipeline and GCP-native
+# persistence. Pins keep CI reproducible and pip-audit meaningful.
 
-# Conversational agent (optional: python -m archon.cli --agent)
-google-adk>=1.0.0
+# Conversational agent + analysis pipeline (python -m archon.cli --agent).
+google-adk>=2.3,<3
 
-# GCP-native persistence (optional: set GOOGLE_CLOUD_PROJECT)
-google-cloud-firestore>=2.16.0
-google-cloud-storage>=2.16.0
+# GCP-native persistence (optional: set GOOGLE_CLOUD_PROJECT).
+google-cloud-firestore>=2.16,<3
+google-cloud-storage>=2.16,<3
