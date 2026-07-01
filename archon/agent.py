@@ -15,14 +15,16 @@ import os
 from .extract import extract_document
 from .ledger import Ledger
 from .store import get_store
+from .validation import summary as validation_summary
+from .validation import validate
 
 INSTRUCTION = """\
 You are Archon, an autonomous bookkeeper for a small Greek business. The owner
 sends you business documents — sales invoices, purchase invoices, bank
 transactions, payroll runs. For each document the user gives you, call
 `record_document`. When asked about money, call `reconcile_bank` (to match bank
-lines to invoices/payroll) and/or `get_books` (for the P&L, cash view, AR/AP),
-then explain plainly.
+lines to invoices/payroll), `validate_books` (to run the R1–R4 consistency
+gates), and/or `get_books` (for the P&L, cash view, AR/AP), then explain plainly.
 
 Be precise and never invent figures — report only what the tools return.
 Remember: payroll EXPENSE (true employer cost) is larger than the net amount that
@@ -44,7 +46,11 @@ class ArchonAgent:
                 "google-adk not installed. `pip install google-adk`, or use the "
                 "deterministic pipeline (python -m archon.cli)."
             ) from e
-        if not (os.getenv("GOOGLE_API_KEY") or os.getenv("GOOGLE_GENAI_USE_VERTEXAI")):
+        # A string model name resolves to real Gemini and needs a key; an injected
+        # model object (e.g. a scripted fake in tests) runs fully offline.
+        if isinstance(model, str) and not (
+            os.getenv("GOOGLE_API_KEY") or os.getenv("GOOGLE_GENAI_USE_VERTEXAI")
+        ):
             raise RuntimeError("Set GOOGLE_API_KEY (AI Studio) or configure Vertex AI for ADK.")
 
         self.ledger = Ledger(period=period, company=company)
@@ -75,6 +81,13 @@ class ArchonAgent:
                 for m in self.ledger.reconcile()
             ]}
 
+        def validate_books() -> dict:
+            """Run the R1–R4 cross-document consistency gates over the books."""
+            results = self.ledger and validate(self.ledger)
+            return {"summary": validation_summary(results),
+                    "gates": [{"rule": r.rule, "passed": r.passed,
+                               "severity": r.severity, "message": r.message} for r in results]}
+
         def get_books() -> dict:
             """Return the period P&L, cash view, AR/AP, and notes."""
             s = self.ledger.statements()
@@ -88,7 +101,7 @@ class ArchonAgent:
 
         self._agent = Agent(name="archon_bookkeeper", model=model,
                             instruction=INSTRUCTION,
-                            tools=[record_document, reconcile_bank, get_books])
+                            tools=[record_document, reconcile_bank, validate_books, get_books])
         self._runner = InMemoryRunner(agent=self._agent, app_name=app_name)
         self._ensure_session()
 
