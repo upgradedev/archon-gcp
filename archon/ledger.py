@@ -3,8 +3,9 @@ and statement roll-up. The LLM never touches the math; it orchestrates this.
 
 Every document becomes a balanced journal entry; bank lines are matched to the
 invoice/payroll they settle; everything rolls up to a P&L, a cash view, and
-AR/AP. Country-specific posting rules live here (this is the Greek/EFKA flavour;
-swap this module to localise).
+AR/AP. Jurisdiction-specific posting rules (statutory employer social-security
+contributions, national tax & e-invoicing rules) live here; swap this module to
+localise.
 """
 from __future__ import annotations
 
@@ -154,7 +155,8 @@ class Ledger:
         if payroll:
             notes.append(
                 f"Payroll expense €{payroll:,.2f}, but only the net left the bank so far; "
-                f"€{round(efka_payable + tax_payable, 2):,.2f} of EFKA+tax is still payable."
+                f"€{round(efka_payable + tax_payable, 2):,.2f} of employer social-security "
+                f"contributions + tax is still payable."
             )
 
         return FinancialStatements(

@@ -2,7 +2,8 @@
 
 In production this tool sends a scanned PDF to **Gemini** (vision) on GCP; here
 it parses OCR-style text blobs deterministically so the notebook runs with no
-key. Greek diacritics are folded so unaccented patterns match accented text.
+key. Works on scanned and multilingual documents — diacritics are folded so
+unaccented patterns match accented text.
 """
 from __future__ import annotations
 

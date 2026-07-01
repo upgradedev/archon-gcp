@@ -1,14 +1,14 @@
-0|12|The bank statement is not your financial picture
-12|22|Your books exist only once you correlate the documents
-22|34|Archon: an autonomous bookkeeper - Google ADK + Gemini on GCP
-34|46|Classify, post double-entry, reconcile the bank
+0|12|Archon - unified financial intelligence for small business
+12|22|Bring every financial document into one consolidated view
+22|34|Classify + post double-entry - Google ADK + Gemini on GCP
+34|46|Sales, purchases, bank, payroll - one balanced set of books
 46|58|6 documents -> 6 balanced journal entries (LLM orchestrates, math is deterministic)
-58|68|All 3 bank lines reconcile
-68|82|Eval gate: R1-R4 cross-document consistency rules
-82|92|4 of 4 gates pass - the books are trustworthy end to end
-92|104|Payroll expense EUR 28,249 - the true employer cost
-104|116|but only EUR 14,350 left the bank this month
-116|128|EUR 13,899 EFKA + tax is a payable that settles later
+58|68|Completeness check: every bank line reconciled to the document behind it
+68|82|A payment with no matching invoice gets flagged - the gap owners miss
+82|92|Eval gate: R1-R4 cross-document consistency + reconciliation rules
+92|104|4 of 4 gates pass - the whole picture holds together
+104|116|One insight of many: workforce cost EUR 28,249 - the true employer cost
+116|128|but only EUR 14,350 left the bank; EUR 13,899 settles later - profit != cash
 128|140|ADK SequentialAgent: reconciler -> validator -> narrator
 140|150|Tools, session memory, multi-agent, eval gate
-150|160|Runs offline & keyless - live Gemini with a key - MIT
+150|160|Runs offline + keyless - live Gemini with a key - MIT

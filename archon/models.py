@@ -1,14 +1,16 @@
-"""Archon (GCP) — domain models for an autonomous bookkeeping agent.
+"""Archon (GCP) — domain models for a unified financial intelligence agent.
 
 Archon ingests the heterogeneous documents a small business actually receives
 — sales invoices, purchase invoices, bank transactions, payroll — classifies
 them, posts double-entry journal entries, reconciles invoices against payments,
-and rolls everything up into a P&L, a cash position, and AR/AP.
+and rolls everything up into a consolidated P&L, a cash position, and AR/AP —
+then cross-checks the whole picture for missing or inconsistent information.
 
 Payroll is just one document family here (a single payroll run is itself told by
-several documents and several journal lines — net pay to the employee, EFKA to
-the institution, withheld tax to the authority). Nothing about this is "the
-payroll truth"; it's ordinary bookkeeping, done by an agent.
+several documents and several journal lines — net pay to the employee, employer
+social-security contributions to the fund, withheld tax to the authority).
+Nothing here is a single "payroll" trick; it's ordinary bookkeeping across the
+full financial picture, done by an agent.
 """
 from __future__ import annotations
 
@@ -25,7 +27,7 @@ class DocType(str, Enum):
 
 
 class Account(str, Enum):
-    """A minimal chart of accounts (Greek SMB flavour, jurisdiction-pluggable)."""
+    """A minimal chart of accounts (SMB flavour, jurisdiction-pluggable)."""
     REVENUE = "Revenue"
     COGS = "Cost of Goods / Services"
     OPEX = "Operating Expenses"

@@ -1,19 +1,23 @@
-# Archon — the autonomous bookkeeper (GCP)
+# Archon — unified financial intelligence (GCP)
+
+> **The new era of financial intelligence.**
 
 Public notebook: https://www.kaggle.com/code/efthimiosfousekis/archon-autonomous-bookkeeper-gcp  
 Evidence CI: https://github.com/upgradedev/archon-gcp/actions/workflows/ci.yml
 
-> Archon reads the documents a small business actually receives — sales invoices, purchase invoices, bank transactions, payroll — **classifies** them, posts **double-entry journal entries**, **reconciles** invoices against payments, and rolls everything into a **P&L, a cash view, and AR/AP**. An AI bookkeeper, not a dashboard.
+> Archon is a **unified financial intelligence platform** for small business. It is built to ingest **all** of a company's financial documents and data — sales & purchase invoices, sales & purchase orders, receipts, payments, bank transfers & statements, payroll, expenses, sales targets — into **one environment**, and turn them into a consolidated, **period-over-period view** (P&L, EBITDA, per-period metrics, total workforce cost, cash) — **and** cross-check the whole picture to surface **missing or inconsistent information**. Not a dashboard: an agent that keeps real, auditable books and tells you what doesn't add up.
 
 Built for the **Kaggle × Google "AI Agents Intensive (Vibe Coding)" capstone** with **Google ADK + Gemini** on **GCP**. This is the **GCP member of the Archon family** (Archon also runs on Nebius and Azure — same product, platform-native infra each time).
+
+> **Scope note (honest):** the broad multi-document consolidation above is the product **vision and direction**. This GCP build implements the spine of it end to end — classification, double-entry posting, **bank ↔ document reconciliation with unmatched lines flagged**, the R1–R4 cross-document eval gate, and a P&L / cash view — over one worked example month. The generic categories not yet in this build (e.g. sales-target variance) are on the roadmap, not narrated as shipped.
 
 ---
 
 ## Why this exists
 
-Owners look at the **bank statement** and think that's the picture. It isn't. The books only exist once you **correlate documents**: an invoice is revenue *and* a receivable until the bank line settles it; a payroll run is a much bigger **expense** than the net that leaves the account, because EFKA + withheld tax are **payables that settle later**. Archon does that correlation automatically and keeps real double-entry books.
+Owners look at the **bank statement** and think that's the picture. It isn't. The picture only exists once you **bring every document together and cross-check them**: an invoice is revenue *and* a receivable until the bank line settles it; a purchase is an expense *and* a payable; and — crucially — **a bank payment with no matching invoice** is exactly the kind of gap that hides errors (the vendor never sent it, the bookkeeper never registered it, or the payment itself is wrong). Archon does that correlation and completeness-checking automatically and keeps real double-entry books.
 
-> **No "payroll truth" gimmick.** A payroll run is ordinary bookkeeping with several journal lines, and the figures are jurisdiction-specific (this build uses the Greek EFKA/ΦΜΥ flavour — swap `ledger.py` to localise).
+The **workforce-cost** insight is one illustrative example: a payroll run is a much bigger **expense** than the net that leaves the account, because employer social-security contributions + withheld tax are **payables that settle later**. The figures are jurisdiction-specific (statutory employer social-security + national tax rules — swap `ledger.py` to localise).
 
 ## What the demo shows (one mixed month)
 
@@ -23,9 +27,9 @@ Operating expenses €  1,000.00      Cash out  €15,590.00
 Payroll expense    € 28,249.00      Net cash  €-9,390.00
 Net profit         €-24,249.00      AR €0.00 · AP €0.00
 ⓘ Payroll expense €28,249, but only the net (€14,350) left the bank this month;
-  €13,899 of EFKA+tax is still payable.
+  €13,899 of employer social-security contributions + tax is still payable.
 ```
-Every journal entry balances; every bank line reconciles to its invoice/payroll.
+Every journal entry balances; every bank line reconciles to its invoice/payroll (an unmatched line is flagged "no matching document").
 
 ## Quickstart
 

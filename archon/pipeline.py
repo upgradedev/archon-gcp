@@ -40,8 +40,8 @@ Do not invent figures."""
 _NARRATOR_INSTRUCTION = """\
 You are the narrator stage — a CFO-level analyst. Using the validation note and
 the fact sheet, write a concise 2–3 sentence executive summary. Emphasise that
-payroll EXPENSE exceeds the cash that left the bank (EFKA + withheld tax settle
-later). Validation: {validation}
+payroll EXPENSE exceeds the cash that left the bank (employer social-security
+contributions + withheld tax settle later). Validation: {validation}
 Report only figures present in the fact sheet."""
 
 

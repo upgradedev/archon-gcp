@@ -8,7 +8,7 @@ from archon.models import Account, DocType
 
 
 def _ledger() -> Ledger:
-    led = Ledger(period="2026-01", company="Reflective IKE")
+    led = Ledger(period="2026-01", company="Meridian Trading Co")
     for name, text in SAMPLE_DOCS.items():
         led.add(extract_document(text, source_file=name, period="2026-01"))
     return led
@@ -68,13 +68,13 @@ def test_pnl_matches_ground_truth():
 
 
 def test_cash_view_separates_from_pnl():
-    """The month's cash out (15,590) is far less than expense, because EFKA+tax
-    is still payable — the honest cash-timing insight."""
+    """The month's cash out (15,590) is far less than expense, because employer
+    social-security contributions + tax are still payable — the honest cash-timing insight."""
     s = _ledger().statements()
     assert s.cash_in == GROUND_TRUTH["cash_in"]                    # 6,200
     assert s.cash_out == GROUND_TRUTH["cash_out"]                  # 15,590
     assert s.net_cash == GROUND_TRUTH["net_cash"]                  # -9,390
-    # payroll expense (28,249) exceeds total cash out — money still owed to EFKA/tax
+    # payroll expense (28,249) exceeds total cash out — money still owed for social-security/tax
     assert s.payroll_expense > s.cash_out
 
 

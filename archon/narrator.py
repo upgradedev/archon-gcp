@@ -27,7 +27,8 @@ def narrate(stmt: FinancialStatements, validation: list[ValidationResult] | None
         held_back = round(stmt.payroll_expense - (stmt.cash_out - stmt.opex), 2)
         parts.append(
             f"Cash tells a different story: only €{stmt.cash_out:,.2f} actually left the "
-            f"account, because EFKA and withheld tax are payables that settle later — the "
+            f"account, because employer social-security contributions and withheld tax are "
+            f"payables that settle later — the "
             f"P&L expense of €{stmt.payroll_expense:,.2f} runs ahead of the cash."
         )
 

@@ -1,6 +1,6 @@
-"""Self-contained sample month (2026-01) for a small Greek company — a mix of
-the documents a real business receives, so Archon can show classification +
-correlation across types, not just one trick.
+"""Self-contained sample month (2026-01) — synthetic, multilingual documents a
+real business receives, so Archon can show classification + correlation across
+types, not just one trick.
 
 A coherent, balanced set:
   · 1 sales invoice      (revenue 5,000 + VAT 1,200 = 6,200)
@@ -8,11 +8,13 @@ A coherent, balanced set:
   · 3 bank transactions  (customer pays 6,200 · we pay vendor 1,240 · payroll net 14,350)
   · 1 payroll run        (gross 23,100 → net 14,350, employer cost 28,249)
 
-Payroll figures are realistic Greek bookkeeping (NOT a "28% gap"):
-  gross 23,100  − employee EFKA 3,204 − withheld tax 5,546 = net 14,350
-  employer cost = gross 23,100 + employer EFKA 5,149       = 28,249
-Only 14,350 leaves the account to employees this month; 13,899 of EFKA+tax is a
-payable that settles later — the real, honest cash-timing insight.
+Payroll figures are realistic statutory bookkeeping (NOT a "28% gap"):
+  gross 23,100  − employee social-security 3,204 − withheld tax 5,546 = net 14,350
+  employer cost = gross 23,100 + employer social-security 5,149       = 28,249
+Only 14,350 leaves the account to employees this month; 13,899 of employer
+social-security contributions + tax is a payable that settles later — the real,
+honest cash-timing insight, and one example of the completeness picture Archon
+consolidates.
 """
 
 SALES_INVOICE = """\
@@ -90,5 +92,5 @@ GROUND_TRUTH = {
     "cash_in": 6200.00,
     "cash_out": 1240.00 + 14350.00,               # 15,590.00
     "net_cash": 6200.00 - 15590.00,               # -9,390.00
-    "payroll_payable_remaining": 5149.00 + 3204.00 + 5546.00,  # EFKA(er+ee)+tax = 13,899
+    "payroll_payable_remaining": 5149.00 + 3204.00 + 5546.00,  # social-security(er+ee)+tax = 13,899
 }

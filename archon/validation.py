@@ -8,7 +8,7 @@ double-entry ledger:
   R1  the bank line that pays payroll ≈ the payroll run's net pay        (±2%)
   R2  employer cost / gross is a sane social-contribution ratio    (1.15–1.35)
   R3  the payroll payment lands on or before the period's last day
-  R4  the payroll adds up: gross ≥ net + withheld tax (employee EFKA ≥ 0)
+  R4  the payroll adds up: gross ≥ net + withheld tax (employee deductions ≥ 0)
 
 R4 is deliberately *additive* to the double-entry balance check: a balanced
 journal already forces employer_cost = gross + employer_efka, so R4 instead
@@ -26,8 +26,9 @@ from datetime import date, datetime
 from .ledger import _PAYROLL_KEYS
 from .models import DocType, Document, ValidationResult
 
-# Employer cost as a multiple of gross pay. Greek employer EFKA is ~22%, so the
-# ratio sits near 1.22; the band tolerates other jurisdictions/rounding.
+# Employer cost as a multiple of gross pay. Statutory employer social-security
+# contributions are ~22%, so the ratio sits near 1.22; the band tolerates other
+# jurisdictions/rounding.
 _EMPLOYER_COST_BAND = (1.15, 1.35)
 _BANK_TOLERANCE = 0.02  # ±2%
 
@@ -118,7 +119,7 @@ def r3_payment_within_period(docs: list[Document], period: str) -> ValidationRes
 
 # ── R4 ──────────────────────────────────────────────────────────────────────
 def r4_payroll_identity(docs: list[Document]) -> ValidationResult:
-    rule = "R4: gross ≥ net + withheld tax (employee EFKA ≥ 0)"
+    rule = "R4: gross ≥ net + withheld tax (employee deductions ≥ 0)"
     payroll = _payroll(docs)
     if not payroll or not payroll.gross_amount:
         return _skip(rule)
@@ -129,7 +130,7 @@ def r4_payroll_identity(docs: list[Document]) -> ValidationResult:
     passed = employee_efka >= 0
     return ValidationResult(
         rule, passed, "info" if passed else "error",
-        f"implied employee EFKA = €{employee_efka:,.2f} "
+        f"implied employee social-security deduction = €{employee_efka:,.2f} "
         f"(gross {gross:,.2f} − net {net:,.2f} − tax {tax:,.2f})",
     )
 

@@ -15,7 +15,7 @@ from archon.validation import (
 
 
 def _full_ledger() -> Ledger:
-    led = Ledger(period="2026-01", company="Reflective IKE")
+    led = Ledger(period="2026-01", company="Meridian Trading Co")
     for name, text in SAMPLE_DOCS.items():
         led.add(extract_document(text, source_file=name, period="2026-01"))
     return led
@@ -51,7 +51,7 @@ def test_r3_payment_within_period():
 def test_r4_payroll_identity_holds():
     r = r4_payroll_identity(_full_ledger().documents)
     assert r.passed
-    assert "3,204" in r.message   # implied employee EFKA
+    assert "3,204" in r.message   # implied employee social-security deduction
 
 
 # ── failure paths ──────────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@
 21   + classified payroll           from payroll_2026-01.txt
 25
 26 ==================================================================
-27   ARCHON - books for Reflective IKE  ·  2026-01
+27   ARCHON - books for Meridian Trading Co  ·  2026-01
 28 ==================================================================
 30   Journal (double-entry):
 31     · Sales invoice INV-2026-014 to ACME RETAIL A.E.  [balanced]
@@ -35,13 +35,13 @@
 79     Net cash           €   -9,390.00
 80   AR €0.00  ·  AP €0.00
 82   note: Payroll expense €28,249.00, but only the net left the bank so far;
-83         €13,899.00 of EFKA+tax is still payable.
+83         €13,899.00 of employer social-security + tax is still payable.
 85 ------------------------------------------------------------------
 86   Validation (R1-R4 eval gate):
 88     ✓ R1: bank payroll line ≈ payroll net pay (±2%)  - 0.0% deviation
 92     ✓ R2: employer cost / gross in [1.15, 1.35]  - ratio 1.223
 96     ✓ R3: payroll payment date ≤ period end  - 2026-01-31 ≤ 2026-01-31
-100     ✓ R4: gross ≥ net + withheld tax  - implied employee EFKA €3,204.00
+100     ✓ R4: gross ≥ net + withheld tax  - implied employee social-security €3,204.00
 104 ------------------------------------------------------------------
 108   Self-check passed: every entry balances; R1-R4 gates hold; figures match ground truth.
 114

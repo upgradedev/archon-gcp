@@ -30,17 +30,25 @@ def _inline(module: str) -> str:
 core = "from __future__ import annotations\n\n" + "\n\n".join(_inline(m) for m in CORE_MODULES)
 
 md_intro = """\
-# Archon — the autonomous bookkeeper 🇬🇷
+# Archon — unified financial intelligence
 ### Kaggle × Google AI Agents Intensive (Vibe Coding) — Capstone
+> **The new era of financial intelligence.**
 
-Archon reads the documents a small business actually receives — **sales invoices,
-purchase invoices, bank transactions, payroll** — **classifies** them, posts
-**double-entry journal entries**, **reconciles** invoices against bank payments,
-and rolls everything up into a **P&L, a cash view, and AR/AP**.
+Archon is a **unified financial intelligence** agent for small business. It is
+built to ingest **all** of a company's financial documents — sales & purchase
+invoices, orders, receipts, payments, bank transfers, payroll, expenses — into
+one place, produce a consolidated **period-over-period** view (**P&L, EBITDA,
+cash, total workforce cost**), **and** cross-check the whole picture to surface
+**missing or inconsistent information** (e.g. a bank payment with no matching
+invoice).
 
-It's an AI **bookkeeper**, not a dashboard — and it keeps real books, so the
-numbers are auditable. Built with **Google ADK + Gemini** on **GCP** (the GCP
-member of the Archon family, which also runs on Nebius and Azure).
+This notebook demonstrates the spine of that vision end to end: it **classifies**
+the documents a business receives, posts **double-entry journal entries**,
+**reconciles** every bank line to the document that justifies it (flagging any
+that don't match), runs the **R1–R4 eval gate**, and rolls everything into a
+**P&L, a cash view, and AR/AP**. Not a dashboard — an agent that keeps real,
+auditable books. Built with **Google ADK + Gemini** on **GCP** (the GCP member of
+the Archon family, which also runs on Nebius and Azure).
 
 > The cell below inlines the whole engine so this notebook runs top-to-bottom
 > with **zero setup**. The conversational ADK+Gemini agent is at the end (add a
@@ -48,7 +56,7 @@ member of the Archon family, which also runs on Nebius and Azure).
 
 demo = '''\
 # Ingest a mixed month, keep the books, show the result
-led = Ledger(period=GROUND_TRUTH["period"], company="Reflective IKE")
+led = Ledger(period=GROUND_TRUTH["period"], company="Meridian Trading Co")
 for name, text in SAMPLE_DOCS.items():
     doc = extract_document(text, source_file=name, period=led.period)
     led.add(doc)
@@ -130,7 +138,7 @@ if HAVE_ADK:
             yield LlmResponse(content=types.Content(role="model", parts=[types.Part(text=self.reply)]))
 
     # Deterministic engine first: compute the books + gates, build the fact sheet.
-    led = Ledger(period=GROUND_TRUTH["period"], company="Reflective IKE")
+    led = Ledger(period=GROUND_TRUTH["period"], company="Meridian Trading Co")
     for name, text in SAMPLE_DOCS.items():
         led.add(extract_document(text, source_file=name, period=led.period))
     facts = facts_sheet(led.statements(), validate(led))
@@ -188,7 +196,7 @@ if not HAVE_ADK:
     print("google-adk + GOOGLE_API_KEY not configured — skipping the live agent.")
     print("The deterministic books above are the same numbers the agent reports.")
 else:
-    session_ledger = Ledger(period="2026-01", company="Reflective IKE")
+    session_ledger = Ledger(period="2026-01", company="Meridian Trading Co")
 
     def record_document(doc_text: str, source_file: str = "doc.txt") -> dict:
         """Classify and post one business document to the books."""
@@ -216,11 +224,13 @@ else:
                 "net_cash": s.net_cash, "notes": s.notes}
 
     agent = Agent(name="archon_bookkeeper", model="gemini-2.5-flash",
-                  instruction="You are Archon, an autonomous bookkeeper. Call record_document for "
-                  "each document the user provides, reconcile_bank to match bank lines to invoices "
-                  "and payroll, validate_books to run the R1-R4 gates, and get_books when asked "
+                  instruction="You are Archon, a unified financial intelligence agent. Call "
+                  "record_document for each document the user provides, reconcile_bank to match "
+                  "bank lines to invoices and payroll (and flag any with no matching document), "
+                  "validate_books to run the R1-R4 gates, and get_books when asked "
                   "about money. Payroll "
-                  "EXPENSE exceeds the net that leaves the bank; the difference (EFKA+tax) is a "
+                  "EXPENSE exceeds the net that leaves the bank; the difference (employer "
+                  "social-security contributions + tax) is a "
                   "payable that settles later — surface that. Never invent figures.",
                   tools=[record_document, reconcile_bank, validate_books, get_books])
     runner = InMemoryRunner(agent=agent, app_name="archon")

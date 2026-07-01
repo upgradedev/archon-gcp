@@ -42,7 +42,7 @@ def main() -> int:
     from archon.ledger import Ledger
     from archon.pipeline import run_analysis
 
-    led = Ledger(period="2026-01", company="Reflective IKE")
+    led = Ledger(period="2026-01", company="Meridian Trading Co")
     for name, text in SAMPLE_DOCS.items():
         led.add(extract_document(text, source_file=name, period="2026-01"))
 
@@ -51,7 +51,8 @@ def main() -> int:
         ScriptedText("All 3 bank lines reconcile to their invoices and payroll."),
         ScriptedText("R1-R4 consistency gates all hold."),
         ScriptedText("Net loss of 24,249; payroll expense of 28,249 runs ahead of "
-                     "the 15,590 cash out because EFKA and withheld tax settle later."),
+                     "the 15,590 cash out because employer social-security contributions "
+                     "and withheld tax settle later."),
     ]
     r = run_analysis(led, models=models)
 

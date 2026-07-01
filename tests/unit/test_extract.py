@@ -3,7 +3,7 @@ from archon.extract import classify, extract_document
 from archon.models import DocType
 
 
-def test_classify_folds_greek_accents():
+def test_classify_folds_diacritic_accents():
     assert classify("ΤΙΜΟΛΟΓΙΟ ΠΩΛΗΣΗΣ") == DocType.SALES_INVOICE
     assert classify("τιμολογιο αγορας") == DocType.PURCHASE_INVOICE
     assert classify("ΚΙΝΗΣΗ ΛΟΓΑΡΙΑΣΜΟΥ") == DocType.BANK_TRANSACTION

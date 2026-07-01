@@ -7,7 +7,7 @@ from archon.validation import validate
 
 
 def _ledger() -> Ledger:
-    led = Ledger(period="2026-01", company="Reflective IKE")
+    led = Ledger(period="2026-01", company="Meridian Trading Co")
     for name, text in SAMPLE_DOCS.items():
         led.add(extract_document(text, source_file=name, period="2026-01"))
     return led
@@ -17,7 +17,7 @@ def test_narrate_reports_net_loss_and_cash_timing():
     led = _ledger()
     text = narrate(led.statements(), validate(led))
     assert "net loss of €24,249.00" in text
-    assert "settle later" in text                  # the EFKA/tax cash-timing insight
+    assert "settle later" in text                  # the social-security/tax cash-timing insight
     assert "gates passed" in text
 
 

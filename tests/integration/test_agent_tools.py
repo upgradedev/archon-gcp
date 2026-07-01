@@ -20,7 +20,7 @@ def test_agent_records_document_via_tool_call():
         ("call", "record_document", {"doc_text": PAYROLL, "source_file": "payroll.txt"}),
         ("text", "Recorded the payroll run."),
     ])
-    agent = ArchonAgent(period="2026-01", company="Reflective IKE", model=model)
+    agent = ArchonAgent(period="2026-01", company="Meridian Trading Co", model=model)
     reply = agent.send("Please record this payroll document.")
     assert "Recorded" in reply
     assert len(agent.ledger.documents) == 1
@@ -35,7 +35,7 @@ def test_agent_chains_record_validate_and_report():
         ("call", "get_books", {}),
         ("text", "Two documents booked; payroll expense exceeds cash out."),
     ])
-    agent = ArchonAgent(period="2026-01", company="Reflective IKE", model=model)
+    agent = ArchonAgent(period="2026-01", company="Meridian Trading Co", model=model)
     reply = agent.send("Record these and tell me the books.")
     assert "payroll expense" in reply.lower()
     assert len(agent.ledger.documents) == 2

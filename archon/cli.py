@@ -56,7 +56,7 @@ def _print_books(led: Ledger) -> None:
 
 def run_deterministic() -> Ledger:
     store = get_store()
-    led = Ledger(period=GROUND_TRUTH["period"], company="Reflective IKE")
+    led = Ledger(period=GROUND_TRUTH["period"], company="Meridian Trading Co")
     print(f"Store backend: {type(store).__name__}")
     print("Ingesting a mixed document set (sales, purchase, bank x3, payroll)...")
     for name, text in SAMPLE_DOCS.items():
@@ -82,7 +82,7 @@ def run_agent() -> None:
     from .agent import ArchonAgent
 
     print("Conversational ADK + Gemini agent — feeding documents across turns\n")
-    agent = ArchonAgent(period=GROUND_TRUTH["period"], company="Reflective IKE")
+    agent = ArchonAgent(period=GROUND_TRUTH["period"], company="Meridian Trading Co")
     docs = list(SAMPLE_DOCS.items())
     turns = [f"Please record this document:\n\n{t}" for _, t in docs]
     turns.append("Reconcile the bank lines and show me the P&L and our cash position. "

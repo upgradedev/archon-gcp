@@ -17,7 +17,7 @@ from archon.pipeline import run_analysis  # noqa: E402
 
 
 def _ledger() -> Ledger:
-    led = Ledger(period="2026-01", company="Reflective IKE")
+    led = Ledger(period="2026-01", company="Meridian Trading Co")
     for name, text in SAMPLE_DOCS.items():
         led.add(extract_document(text, source_file=name, period="2026-01"))
     return led
