@@ -29,12 +29,16 @@ documents you receive; it:
 1. **Classifies** each document (sales / purchase / bank / payroll).
 2. Posts a **balanced double-entry journal entry** for it.
 3. **Reconciles** every bank line to the invoice or payroll it settles.
-4. Rolls everything up into a **P&L, a cash view, and AR/AP** — and flags the
-   cash-timing gap (expense booked now, EFKA/tax paid later).
+4. Runs an **eval gate** — four cross-document consistency rules (R1–R4) that
+   fail the books when the documents disagree.
+5. Rolls everything up into a **P&L, a cash view, and AR/AP**, then **narrates** a
+   CFO-level summary — flagging the cash-timing gap (expense booked now, EFKA/tax
+   paid later).
 
-It's deliberately **one legible agent with three tools**, not a platform. The LLM
-orchestrates; the ledger math is **deterministic and auditable** (an accountant can
-trust the numbers, not just the narration).
+A conversational agent with four tools handles turns and memory; a
+`SequentialAgent` chain (**reconciler → validator → narrator**) does the analysis.
+The LLM orchestrates; the ledger math is **deterministic and auditable** (an
+accountant can trust the numbers, not just the narration).
 
 ## 3. How I vibe-coded it  *(rubric: application of course concepts · vibe coding)*
 
@@ -48,9 +52,11 @@ document. A real bug the tests caught: my first VAT parser stopped at the rate i
 `ΦΠΑ 24%: 1.200,00` — the spec-driven test pinned the correct €1,200.
 
 Course concepts, concretely:
-- **Tools / function calling:** `record_document`, `reconcile_bank`, `get_books`.
+- **Tools / function calling:** `record_document`, `reconcile_bank`, `validate_books`, `get_books`.
+- **Multi-agent (`SequentialAgent`):** reconciler → validator → narrator, passing
+  state forward via `output_key`.
 - **Memory / state:** the agent's ledger accumulates documents across turns.
-- **Evaluation / guardrails:** balance + reconciliation checks.
+- **Evaluation / guardrails:** every entry must balance; the R1–R4 gates must hold.
 - **Spec-driven:** one-paragraph contract per module; reproducible tests.
 
 ## 4. Demo  *(rubric: communication)*
@@ -68,9 +74,11 @@ Every journal entry balances; all three bank lines reconcile. Video: `[[ USER: Y
 ## 5. Architecture  *(rubric: solution design · application of course concepts)*
 
 ```
-owner ─▶ Archon ADK agent (Gemini) ─▶ record_document · reconcile_bank · get_books
+owner ─▶ Archon ADK agent (Gemini) ─▶ record_document · reconcile_bank · validate_books · get_books
                                             │
-                              ledger.py (deterministic double-entry)
+   SequentialAgent analysis pipeline:  reconciler ─▶ validator ─▶ narrator   (output_key state)
+                                            │
+                              ledger.py (deterministic double-entry) + validation.py (R1–R4 gate)
                                             │
                               Firestore (ledger) · GCS (documents)   [local fallback]
 ```
@@ -83,12 +91,16 @@ infra each time). Swap `ledger.py` to localise the chart of accounts / tax rules
 ## 6. Code & reproducibility  *(rubric: communication · real-world value)*
 
 - Public repo (MIT): `https://github.com/upgradedev/archon-gcp` — `python -m archon.cli` runs the books;
-  `pytest -q` → **11 offline tests**.
+  `pytest` → **43 offline tests** across a unit → integration → e2e pyramid (the
+  ADK agent and `SequentialAgent` run offline via scripted fake models — no key).
 - Public notebook: `https://www.kaggle.com/code/efthimiosfousekis/archon-autonomous-bookkeeper-gcp`
-  is self-contained and runs top-to-bottom with **zero setup**; the agent cell
-  runs with a `GOOGLE_API_KEY` secret.
+  is self-contained and runs top-to-bottom with **zero setup** (including a live,
+  offline `SequentialAgent` demo); the conversational agent cell runs with a
+  `GOOGLE_API_KEY` secret.
 - Evidence CI: `https://github.com/upgradedev/archon-gcp/actions/workflows/ci.yml`
-  rebuilds the notebook and runs the deterministic demo.
+  runs the test pyramid, **executes the notebook top-to-bottom**, runs the demo,
+  and enforces **security gates** — gitleaks (secret scan), CodeQL (Python SAST),
+  and pip-audit (dependency CVEs).
 
 ## 7. Honest lessons
 
